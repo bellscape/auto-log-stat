@@ -3,6 +3,8 @@ scalaVersion := "2.11.6"
 
 // common
 
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4"
+
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.8.1"
