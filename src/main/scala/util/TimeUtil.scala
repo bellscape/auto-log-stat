@@ -17,7 +17,7 @@ object TimeUtil {
 	def minute2time(text: String): Long = {
 		str2time(text, "yyyyMMddHHmm")
 	}
-	private def day2time(text: String): Long = {
+	def day2time(text: String): Long = {
 		str2time(text, "yyyyMMdd")
 	}
 
@@ -34,6 +34,9 @@ object TimeUtil {
 	}
 	def time2expression(time: Long): String = {
 		time2str(time, "yyyy-MM-dd HH:mm:ss")
+	}
+	def today(): String = {
+		time2day(System.currentTimeMillis())
 	}
 
 	/* ------------------------- util ------------------------- */

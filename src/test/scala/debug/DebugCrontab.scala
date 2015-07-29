@@ -3,7 +3,7 @@ package debug
 import stat.crontab.CrontabPerDay
 import util.{TimeUtil, Utils}
 
-object DebugRoutine extends Utils {
+object DebugCrontab extends Utils {
 	def main(args: Array[String]) {
 
 		val today = TimeUtil.time2day(System.currentTimeMillis())

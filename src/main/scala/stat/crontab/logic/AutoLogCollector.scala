@@ -27,9 +27,9 @@ object AutoLogCollector extends Utils {
 			return (stdout, stderr)
 		} catch {
 			case e: IOException =>
-				log("#run io err: " + e.getMessage)
-			case _: Throwable =>
-				println("#run _ err: something went wrong!")
+				log("#run io err.", e)
+			case e: Throwable =>
+				log("#run _ err.", e)
 		}
 		(Seq.empty[String], Seq.empty[String])
 	}

@@ -9,15 +9,15 @@ import util.{DBRunner, TimeUtil}
 
 object Env {
 
-	private val Array(host, dbname, user, pass) = {
+	val (Array(host, dbname, user, pass), (web_def_proj, web_def_key)) = {
 		val prop = new Properties()
 		prop.load(new InputStreamReader(
 			getClass.getClassLoader.getResourceAsStream("env.conf"),
 			"UTF-8"))
 
-		"host,dbname,user,pass".split(",").map { key =>
-			prop.getProperty(s"env.db.autolog.$key")
-		}
+		(
+			"host,dbname,user,pass".split(",").map { key => prop.getProperty(s"env.db.autolog.$key") },
+			"proj,key".split(",").map { key => prop.getProperty(s"web.ui.def.$key") })
 	}
 
 	val db = new DBRunner(get_datasource(host, 3306, dbname, user, pass, 10))
