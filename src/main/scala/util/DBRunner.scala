@@ -15,7 +15,7 @@ object DBRunner {
 			mapper.apply(rs)
 		}
 	}
-	class SingleHandler[T](default: T, mapper: ResultSet => T) extends ResultSetHandler[T] {
+	class SingleHandler[T](mapper: ResultSet => T, default: T = null) extends ResultSetHandler[T] {
 		override def handle(rs: ResultSet): T = {
 			if (rs.next) mapper.apply(rs) else default
 		}
@@ -61,22 +61,22 @@ object DBRunner {
 		}
 	}
 
-	private final val singleIntHandler = new SingleHandler[Int](0, _.getInt(1))
-	private final val singleLongHandler = new SingleHandler[Long](0, _.getLong(1))
-	private final val singleDoubleHandler = new SingleHandler[Double](0, _.getDouble(1))
-	private final val singleStringHandler = new SingleHandler[String]("", _.getString(1))
-	private final val singleTimestampHandler = new SingleHandler[Timestamp](null, _.getTimestamp(1))
-	private final val singleBytesHandler = new SingleHandler[scala.Array[Byte]](null, _.getBytes(1))
+	private val singleIntHandler = new SingleHandler[Int](_.getInt(1), 0)
+	private val singleLongHandler = new SingleHandler[Long](_.getLong(1), 0)
+	private val singleDoubleHandler = new SingleHandler[Double](_.getDouble(1), 0)
+	private val singleStringHandler = new SingleHandler[String](_.getString(1), "")
+	private val singleTimestampHandler = new SingleHandler[Timestamp](_.getTimestamp(1))
+	private val singleBytesHandler = new SingleHandler[scala.Array[Byte]](_.getBytes(1))
 
-	private final val intSeqHandler = new SeqHandler[Int](_.getInt(1))
-	private final val longSeqHandler = new SeqHandler[Long](_.getLong(1))
-	private final val strSeqHandler = new SeqHandler[String](_.getString(1))
-	private final val strDoubleSeqHandler = new SeqHandler[(String, Double)](rs => (rs.getString(1), rs.getDouble(2)))
-	private final val intDoubleSeqHandler = new SeqHandler[(Int, Double)](rs => (rs.getInt(1), rs.getDouble(2)))
-	private final val intIntSeqHandler = new SeqHandler[(Int, Int)](rs => (rs.getInt(1), rs.getInt(2)))
-	private final val strStrDoubleSeqHandler = new SeqHandler[(String, String, Double)](rs => (rs.getString(1), rs.getString(2), rs.getDouble(3)))
+	private val intSeqHandler = new SeqHandler[Int](_.getInt(1))
+	private val longSeqHandler = new SeqHandler[Long](_.getLong(1))
+	private val strSeqHandler = new SeqHandler[String](_.getString(1))
+	private val strDoubleSeqHandler = new SeqHandler[(String, Double)](rs => (rs.getString(1), rs.getDouble(2)))
+	private val intDoubleSeqHandler = new SeqHandler[(Int, Double)](rs => (rs.getInt(1), rs.getDouble(2)))
+	private val intIntSeqHandler = new SeqHandler[(Int, Int)](rs => (rs.getInt(1), rs.getInt(2)))
+	private val strStrDoubleSeqHandler = new SeqHandler[(String, String, Double)](rs => (rs.getString(1), rs.getString(2), rs.getDouble(3)))
 
-	private final val dumpHandler = new DumpHandler()
+	private val dumpHandler = new DumpHandler()
 }
 
 class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
@@ -94,7 +94,7 @@ class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
 		query(sql, DBRunner.singleIntHandler, params: _*)
 	}
 	def queryIntWithDefault(sql: String, default: Int, params: Any*): Int = {
-		query(sql, new SingleHandler[Int](default, _.getInt(1)), params: _*)
+		query(sql, new SingleHandler[Int](_.getInt(1), default), params: _*)
 	}
 	def queryLong(sql: String, params: Any*): Long = {
 		query(sql, DBRunner.singleLongHandler, params: _*)
@@ -135,12 +135,20 @@ class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
 		query(sql, DBRunner.strStrDoubleSeqHandler, params: _*)
 	}
 
+	def queryBean[T <: AnyRef](typ: Class[T], sql: String, params: Any*): T = {
+		query(sql, new SingleHandler[T](RowMapperToBean.of(typ).apply, null.asInstanceOf[T]), params: _*)
+	}
+	def queryBeans[T <: AnyRef](typ: Class[T], sql: String, params: Any*): Seq[T] = {
+		query(sql, new SeqHandler[T](RowMapperToBean.of(typ).apply), params: _*)
+	}
+
 	def queryOne[T](sql: String, mapper: ResultSet => T, params: Any*): T = {
 		queryOneWithDefault[T](sql, null.asInstanceOf[T], mapper, params: _*)
 	}
 	def queryOneWithDefault[T](sql: String, default: T, mapper: ResultSet => T, params: Any*): T = {
-		query(sql, new SingleHandler[T](default, mapper), params: _*)
+		query(sql, new SingleHandler[T](mapper, default), params: _*)
 	}
+
 	def querySeq[T](sql: String, mapper: ResultSet => T, params: Any*): Seq[T] = {
 		query(sql, new SeqHandler[T](mapper), params: _*)
 	}
