@@ -11,7 +11,7 @@ object DataStore extends Utils {
 
 	def save_m(proj: String, s: Int, time: Long, rows: Seq[(String, Double, Int)]): Unit = {
 		val table = s"raw_m_${TimeUtil.time2day(time)}"
-		val t = TimeUtil.time2exp(time)
+		val t = TimeUtil.time2expression(time)
 		rows.foreach(row =>
 			db.update(s"replace into $table(p,s,t,k,v,c)values('$proj',$s,'$t',?,?,?)",
 				row._1, row._2, row._3))
@@ -54,7 +54,7 @@ object DataStore extends Utils {
 
 		// sum -> s=0
 		{
-			val tick = TimeUtil.time2exp(TimeUtil.minute2time(minuteStamps._1))
+			val tick = TimeUtil.time2expression(TimeUtil.minute2time(minuteStamps._1))
 			// select p, 0 as s, k, t, sum(v*c)/sum(c) as v, sum(c) as c from raw_m_20131105
 			// where p='tc-imginfo' and s>0 group by p,k,t
 			db.update(s"replace into $minute_table" +
@@ -67,8 +67,8 @@ object DataStore extends Utils {
 
 		// sum -> hourly
 		{
-			val hour_start = TimeUtil.time2exp(TimeUtil.minute2time(minuteStamps._2) - TimeUtil.hour)
-			val hour_end = TimeUtil.time2exp(TimeUtil.minute2time(minuteStamps._2))
+			val hour_start = TimeUtil.time2expression(TimeUtil.minute2time(minuteStamps._2) - TimeUtil.hour)
+			val hour_end = TimeUtil.time2expression(TimeUtil.minute2time(minuteStamps._2))
 			// select p, s, k, t-interval(time_to_sec(t) mod 3600) second as h, sum(v*c)/sum(c) as v, sum(c) as c from raw_m_20131105
 			// where p='tc-imginfo' group by p,s,k,h
 			db.update(s"replace into $hour_table" +

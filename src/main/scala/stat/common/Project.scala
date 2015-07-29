@@ -5,11 +5,13 @@ case class Project(var host: String,
                    var host_pass: String,
                    var proj: String,
                    var server: Int,
-                   var log_file: String) {
+                   var log_pattern: String) {
 
 	def this() {
 		this("", "", "", "", 0, "")
 	}
+
+	def has_log: Boolean = log_pattern.nonEmpty
 
 }
 

@@ -32,7 +32,7 @@ object TimeUtil {
 	def time2minute(time: Long): String = {
 		time2str(time, "yyyyMMddHHmm")
 	}
-	def time2exp(time: Long): String = {
+	def time2expression(time: Long): String = {
 		time2str(time, "yyyy-MM-dd HH:mm:ss")
 	}
 
@@ -48,13 +48,16 @@ object TimeUtil {
 		time2minute(minute2time(time) + diff)
 	}
 
-	def min2day(text: String): String = {
+	def minute2day(text: String): String = {
 		text.take(8)
 	}
-	def add_days(time: String, i: Long): String = {
+	def day2minute(text: String): String = {
+		text + "0000"
+	}
+	def add_days(time: String, i: Int): String = {
 		time2day(day2time(time) + i * day)
 	}
-	def add_days(time: Int, i: Long): Int = {
+	def add_days(time: Int, i: Int): Int = {
 		time2day(day2time(time.toString) + i * day).toInt
 	}
 

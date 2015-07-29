@@ -9,7 +9,7 @@ import scala.io.Codec
 
 trait Utils {
 
-	private val logger = LoggerFactory.getLogger(getClass)
+	val logger = LoggerFactory.getLogger(this.getClass)
 
 	def pHr() {
 		println("------------------------------------------------------------")
