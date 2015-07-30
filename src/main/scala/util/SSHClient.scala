@@ -38,13 +38,13 @@ class SSHClient(val conn: Connection) extends Utils {
 		(stdout, stderr)
 	}
 	private def consume(is: InputStream): Seq[String] = {
-		Source.fromInputStream(is)(codecUtf8).getLines().toArray.toSeq
+		Source.fromInputStream(is)(codec_utf8).getLines().toArray.toSeq
 	}
 
 	/* ------------------------- api.consume ------------------------- */
 
-	def consume(remoteFile: String, consumer: InputStream => Unit) {
-		val in = conn.createSCPClient.get(remoteFile)
+	def consume(remote_file: String, consumer: InputStream => Unit) {
+		val in = conn.createSCPClient.get(remote_file)
 		try {
 			consumer(in)
 		} finally {
@@ -54,19 +54,19 @@ class SSHClient(val conn: Connection) extends Utils {
 
 	/* ------------------------- api.exec ------------------------- */
 
-	def exec(cmd: String, consumer: String => Unit, show_err: Boolean = false) {
+	def exec(cmd: String, consumer: String => Unit, show_err: Boolean = true) {
 		val start = System.currentTimeMillis
 		val total = new AtomicInteger
 		val sess = conn.openSession
 		sess.execCommand(cmd, utf8)
 
-		Source.fromInputStream(sess.getStdout)(codecUtf8).getLines().foreach(line => {
+		Source.fromInputStream(sess.getStdout)(codec_utf8).getLines().foreach(line => {
 			total.incrementAndGet()
 			consumer(line)
 		})
 
 		if (show_err)
-			Source.fromInputStream(sess.getStderr)(codecUtf8).getLines().foreach(line => {
+			Source.fromInputStream(sess.getStderr)(codec_utf8).getLines().foreach(line => {
 				println(s"err> $line")
 			})
 

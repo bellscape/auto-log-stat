@@ -41,15 +41,18 @@ object TimeUtil {
 
 	/* ------------------------- util ------------------------- */
 
-	def floor(time: String, period: Long): String = {
-		val core: Long = (minute2time(time) + timezone_fix) / period
-		time2minute(core * period - timezone_fix)
+	def floor(minute: String, period: Long): Long = {
+		val time = minute2time(minute)
+		val core: Long = (time + timezone_fix) / period
+		core * period - timezone_fix
+	}
+	def ceil(minute: String, period: Long): Long = {
+		val time = minute2time(minute)
+		val remainder = (time + timezone_fix) % period
+		if (remainder > 0) floor(minute, period) + period else time
 	}
 	// bell(2015-7): assuming time zone UTC+8
 	private val timezone_fix = 8 * hour
-	def add_time(time: String, diff: Long) = {
-		time2minute(minute2time(time) + diff)
-	}
 
 	def minute2day(text: String): String = {
 		text.take(8)
@@ -57,11 +60,8 @@ object TimeUtil {
 	def day2minute(text: String): String = {
 		text + "0000"
 	}
-	def add_days(time: String, i: Int): String = {
-		time2day(day2time(time) + i * day)
-	}
-	def add_days(time: Int, i: Int): Int = {
-		time2day(day2time(time.toString) + i * day).toInt
+	def add_days(day_str: String, i: Int): String = {
+		time2day(day2time(day_str) + i * day)
 	}
 
 }

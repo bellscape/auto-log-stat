@@ -2,10 +2,9 @@ package stat.web.entity
 
 import org.joda.time.format.DateTimeFormat
 import stat.common.Project
-import stat.web.logic
 import util.TimeUtil
 
-object Config2Sql extends logic.StatUtil {
+object Config2Sql {
 
 	def gen_sql(sql: String, cond: ChartCondition): Seq[Seq[String]] = {
 		val s = cond.server
@@ -49,6 +48,11 @@ object Config2Sql extends logic.StatUtil {
 				val days = Iterator.iterate[Int](last)(day => add_day(day, -1)).takeWhile(_ >= first).toSeq.reverse
 				days.map(day => do_get_sql(sql_pattern, cond, s"raw_m_$day", "", server_clause))
 		}
+	}
+
+	private def add_day(day: Int, offset: Int): Int = {
+		val time = TimeUtil.day2time(day.toString) + offset * TimeUtil.day
+		TimeUtil.time2day(time).toInt
 	}
 
 	private def to_first_day_of_month(day: Int): Int = (day / 100) * 100 + 1

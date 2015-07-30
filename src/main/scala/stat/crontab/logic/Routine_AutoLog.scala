@@ -19,13 +19,13 @@ object Routine_AutoLog extends Utils {
 		}
 
 		projects.filter(_.has_log).map(_.proj).distinct.foreach { proj =>
-			DataStore.sum_up_minute(time, proj)
+			CrontabData.sum_up_minute(time, proj)
 			log(s"$proj sum up")
 		}
 	}
 
 	def run_day(day: String, projects: Seq[Project] = Project.projects): Unit = {
-		DataStore.ensure_table_for_day(day)
+		CrontabData.ensure_table_for_day(day)
 
 		val time = (s"${day}0000", s"${TimeUtil.add_days(day, 1)}0000")
 
@@ -36,7 +36,7 @@ object Routine_AutoLog extends Utils {
 		})
 
 		projects.filter(_.has_log).map(_.proj).distinct.foreach(proj => {
-			DataStore.sum_up_day(day, proj)
+			CrontabData.sum_up_day(day, proj)
 			log(s"$proj sum up")
 		})
 	}
@@ -45,7 +45,7 @@ object Routine_AutoLog extends Utils {
 		val (stdout, stderr) = AutoLogCollector.collect(time._1, time._2, machine._1, machine._2, machine._3, log_pattern)
 		if (stdout.nonEmpty) {
 			val data = AutoLogCollector.parse(stdout)
-			data.foreach(row => DataStore.save_m(stat._1, stat._2, TimeUtil.minute2time(row._1), row._2))
+			data.foreach(row => CrontabData.save_m(stat._1, stat._2, TimeUtil.minute2time(row._1), row._2))
 
 			val size = data.foldLeft(0)(_ + _._2.length)
 			log(s"${stat._1}-${stat._2} ok: size=$size")

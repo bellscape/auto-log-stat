@@ -1,6 +1,7 @@
 package debug
 
 import stat.web.entity.ChartCondition
+import stat.web.logic.ChartJspUtil
 import util.Utils
 
 object DebugWeb extends Utils {
@@ -10,8 +11,10 @@ object DebugWeb extends Utils {
 		val cond = ChartCondition.parse(path)
 		log(s"cond> $cond")
 
-		// todo
-		// ChartJspUtil.printChart ...
+		ChartJspUtil.print_chart(
+			cond,
+			System.out.println,
+			force_refresh = false)
 
 		log("fin")
 		System.exit(0)

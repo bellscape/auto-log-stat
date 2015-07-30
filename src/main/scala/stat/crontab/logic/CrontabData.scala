@@ -3,7 +3,7 @@ package stat.crontab.logic
 import stat.common.Env
 import util.{TimeUtil, Utils}
 
-object DataStore extends Utils {
+object CrontabData extends Utils {
 
 	val db = Env.db
 
@@ -46,6 +46,7 @@ object DataStore extends Utils {
 
 	def sum_up_minute(minuteStamps: (String, String), proj: String): Unit = {
 		val day = minuteStamps._1.take(8)
+
 		val day_table = "raw_d"
 		val hour_table = s"raw_h_${day.take(6)}"
 		val minute_table = s"raw_m_$day"
@@ -67,8 +68,8 @@ object DataStore extends Utils {
 
 		// sum -> hourly
 		{
-			val hour_start = TimeUtil.time2expression(TimeUtil.minute2time(minuteStamps._2) - TimeUtil.hour)
-			val hour_end = TimeUtil.time2expression(TimeUtil.minute2time(minuteStamps._2))
+			val hour_start = TimeUtil.time2expression(TimeUtil.floor(minuteStamps._1, TimeUtil.hour))
+			val hour_end = TimeUtil.time2expression(TimeUtil.ceil(minuteStamps._2, TimeUtil.hour))
 			// select p, s, k, t-interval(time_to_sec(t) mod 3600) second as h, sum(v*c)/sum(c) as v, sum(c) as c from raw_m_20131105
 			// where p='tc-imginfo' group by p,s,k,h
 			db.update(s"replace into $hour_table" +
@@ -82,7 +83,7 @@ object DataStore extends Utils {
 			s" where p='$proj' group by p,s,k,d")
 	}
 
-	/* ------------------------- util ------------------------- */
+	/* ------------------------- init ------------------------- */
 
 	def ensure_table_for_day(day: String) {
 		ensure_table("raw_d")
@@ -91,7 +92,7 @@ object DataStore extends Utils {
 	}
 
 	private def ensure_table(table: String) {
-		val exists = db.queryStringSeq(s"show tables like '$table'").nonEmpty
+		val exists = db.query_string_seq(s"show tables like '$table'").nonEmpty
 		if (exists) return
 
 		// bell(2013-11): key顺序是这样考虑的：
@@ -109,7 +110,7 @@ CREATE TABLE `$table` (
 `c` int(11) default 0 comment 'count',
 PRIMARY KEY  (p,s,k,t)
 ) ENGINE=MyISAM""")
-		log(s"created table: $table")
+		log(s"table created: $table")
 	}
 
 }

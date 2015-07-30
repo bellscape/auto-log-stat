@@ -9,7 +9,7 @@ import util.{DBRunner, TimeUtil}
 
 object Env {
 
-	val (Array(host, dbname, user, pass), (web_def_proj, web_def_key)) = {
+	val (Array(host, dbname, user, pass), Array(web_def_proj, web_def_key)) = {
 		val prop = new Properties()
 		prop.load(new InputStreamReader(
 			getClass.getClassLoader.getResourceAsStream("env.conf"),

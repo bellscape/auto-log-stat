@@ -65,7 +65,7 @@ case class ChartConfig(id: String, sql: String,
 			data.getOrElse("comment", ""))
 	}
 
-	def getSql(cond: ChartCondition): Seq[Seq[String]] = {
+	def to_sql(cond: ChartCondition): Seq[Seq[String]] = {
 		Config2Sql.gen_sql(sql, cond)
 	}
 

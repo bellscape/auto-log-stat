@@ -17,7 +17,7 @@ case class Project(var host: String,
 
 object Project {
 
-	val projects = Env.db.queryBeans(new Project().getClass, "select * from conf_project where enable > 0 order by id")
+	val projects = Env.db.query_beans(new Project().getClass, "select * from conf_project where enable > 0 order by id")
 
 	def get_server_size(proj: String): Int = {
 		projects.find(_.proj == proj) match {

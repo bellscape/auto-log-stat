@@ -21,7 +21,12 @@ libraryDependencies += "ch.ethz.ganymed" % "ganymed-ssh2" % "262"
 
 // for web
 
-libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
+//libraryDependencies += "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
+libraryDependencies += "javax" % "javaee-api" % "6.0" % "provided"
+
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.0"
+
+libraryDependencies += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.6.0-1"
 
 enablePlugins(JettyPlugin)
 

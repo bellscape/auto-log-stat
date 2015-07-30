@@ -6,12 +6,14 @@ import util.{TimeUtil, Utils}
 object DebugCrontab extends Utils {
 	def main(args: Array[String]) {
 
-		val today = TimeUtil.time2day(System.currentTimeMillis())
+		val today = TimeUtil.today()
 
-		(0 to 0).foreach { i =>
-			val minute = TimeUtil.day2minute(TimeUtil.add_days(today, -i))
-			CrontabPerDay.run(Array(minute))
+		(0 to 1).foreach { i =>
+			val day = TimeUtil.add_days(today, -i)
+			println(s"run day $day")
+			CrontabPerDay.run(Array(TimeUtil.day2minute(day)))
 		}
 
+		println("fin")
 	}
 }

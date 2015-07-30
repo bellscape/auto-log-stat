@@ -4,23 +4,23 @@ import java.sql._
 import javax.sql.DataSource
 
 import org.apache.commons.dbutils.{AbstractQueryRunner, DbUtils, ResultSetHandler}
-import util.DBRunner.{EachHandler, RawHandler, SeqHandler, SingleHandler}
+import util.DBRunner.{EachMapper, RawMapper, SeqMapper, SingleMapper}
 
 import scala.collection.mutable.ArrayBuffer
 
 object DBRunner {
 
-	class RawHandler[T](mapper: ResultSet => T) extends ResultSetHandler[T] {
+	class RawMapper[T](mapper: ResultSet => T) extends ResultSetHandler[T] {
 		override def handle(rs: ResultSet): T = {
 			mapper.apply(rs)
 		}
 	}
-	class SingleHandler[T](mapper: ResultSet => T, default: T = null) extends ResultSetHandler[T] {
+	class SingleMapper[T](mapper: ResultSet => T, default: T = null) extends ResultSetHandler[T] {
 		override def handle(rs: ResultSet): T = {
 			if (rs.next) mapper.apply(rs) else default
 		}
 	}
-	class SeqHandler[T](mapper: ResultSet => T) extends ResultSetHandler[Seq[T]] {
+	class SeqMapper[T](mapper: ResultSet => T) extends ResultSetHandler[Seq[T]] {
 		override def handle(rs: ResultSet): Seq[T] = {
 			val rows = new ArrayBuffer[T]
 			while (rs.next)
@@ -29,13 +29,13 @@ object DBRunner {
 		}
 	}
 
-	class EachHandler(mapper: ResultSet => Unit) extends ResultSetHandler[Unit] {
+	class EachMapper(mapper: ResultSet => Unit) extends ResultSetHandler[Unit] {
 		override def handle(rs: ResultSet): Unit = {
 			while (rs.next)
 				mapper(rs)
 		}
 	}
-	class DumpHandler extends ResultSetHandler[Int] {
+	class DumpMapper extends ResultSetHandler[Int] {
 		override def handle(rs: ResultSet): Int = {
 			val meta = rs.getMetaData
 			val len = meta.getColumnCount
@@ -61,22 +61,22 @@ object DBRunner {
 		}
 	}
 
-	private val singleIntHandler = new SingleHandler[Int](_.getInt(1), 0)
-	private val singleLongHandler = new SingleHandler[Long](_.getLong(1), 0)
-	private val singleDoubleHandler = new SingleHandler[Double](_.getDouble(1), 0)
-	private val singleStringHandler = new SingleHandler[String](_.getString(1), "")
-	private val singleTimestampHandler = new SingleHandler[Timestamp](_.getTimestamp(1))
-	private val singleBytesHandler = new SingleHandler[scala.Array[Byte]](_.getBytes(1))
+	private val single_int_mapper = new SingleMapper[Int](_.getInt(1), 0)
+	private val single_long_mapper = new SingleMapper[Long](_.getLong(1), 0)
+	private val single_double_mapper = new SingleMapper[Double](_.getDouble(1), 0)
+	private val single_string_mapper = new SingleMapper[String](_.getString(1), "")
+	private val single_timestamp_mapper = new SingleMapper[Timestamp](_.getTimestamp(1))
+	private val single_bytes_mapper = new SingleMapper[scala.Array[Byte]](_.getBytes(1))
 
-	private val intSeqHandler = new SeqHandler[Int](_.getInt(1))
-	private val longSeqHandler = new SeqHandler[Long](_.getLong(1))
-	private val strSeqHandler = new SeqHandler[String](_.getString(1))
-	private val strDoubleSeqHandler = new SeqHandler[(String, Double)](rs => (rs.getString(1), rs.getDouble(2)))
-	private val intDoubleSeqHandler = new SeqHandler[(Int, Double)](rs => (rs.getInt(1), rs.getDouble(2)))
-	private val intIntSeqHandler = new SeqHandler[(Int, Int)](rs => (rs.getInt(1), rs.getInt(2)))
-	private val strStrDoubleSeqHandler = new SeqHandler[(String, String, Double)](rs => (rs.getString(1), rs.getString(2), rs.getDouble(3)))
+	private val seq_int_mapper = new SeqMapper[Int](_.getInt(1))
+	private val seq_long_mapper = new SeqMapper[Long](_.getLong(1))
+	private val seq_str_mapper = new SeqMapper[String](_.getString(1))
+	private val seq_str_double_mapper = new SeqMapper[(String, Double)](rs => (rs.getString(1), rs.getDouble(2)))
+	private val seq_int_double_mapper = new SeqMapper[(Int, Double)](rs => (rs.getInt(1), rs.getDouble(2)))
+	private val seq_int_int_mapper = new SeqMapper[(Int, Int)](rs => (rs.getInt(1), rs.getInt(2)))
+	private val seq_str_str_double_mapper = new SeqMapper[(String, String, Double)](rs => (rs.getString(1), rs.getString(2), rs.getDouble(3)))
 
-	private val dumpHandler = new DumpHandler()
+	private val dump_mapper = new DumpMapper()
 }
 
 class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
@@ -90,93 +90,80 @@ class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
 	// bell(2014-3): scala Any* -> java Object...
 	// http://stackoverflow.com/questions/2334200/transforming-scala-varargs-into-java-object-varargs
 
-	def queryInt(sql: String, params: Any*): Int = {
-		query(sql, DBRunner.singleIntHandler, params: _*)
+	def query_int(sql: String, params: Any*): Int = {
+		query(sql, DBRunner.single_int_mapper, params: _*)
 	}
-	def queryIntWithDefault(sql: String, default: Int, params: Any*): Int = {
-		query(sql, new SingleHandler[Int](_.getInt(1), default), params: _*)
+	def query_int_with_default(sql: String, default: Int, params: Any*): Int = {
+		query(sql, new SingleMapper[Int](_.getInt(1), default), params: _*)
 	}
-	def queryLong(sql: String, params: Any*): Long = {
-		query(sql, DBRunner.singleLongHandler, params: _*)
+	def query_long(sql: String, params: Any*): Long = {
+		query(sql, DBRunner.single_long_mapper, params: _*)
 	}
-	def queryDouble(sql: String, params: Any*): Double = {
-		query(sql, DBRunner.singleDoubleHandler, params: _*)
+	def query_double(sql: String, params: Any*): Double = {
+		query(sql, DBRunner.single_double_mapper, params: _*)
 	}
-	def queryString(sql: String, params: Any*): String = {
-		query(sql, DBRunner.singleStringHandler, params: _*)
+	def query_string(sql: String, params: Any*): String = {
+		query(sql, DBRunner.single_string_mapper, params: _*)
 	}
-	def queryTimestamp(sql: String, params: Any*): Timestamp = {
-		query(sql, DBRunner.singleTimestampHandler, params: _*)
+	def query_timestamp(sql: String, params: Any*): Timestamp = {
+		query(sql, DBRunner.single_timestamp_mapper, params: _*)
 	}
-	def queryBytes(sql: String, params: Any*): scala.Array[Byte] = {
-		query(sql, DBRunner.singleBytesHandler, params: _*)
-	}
-
-	def queryIntSeq(sql: String, params: Any*): Seq[Int] = {
-		query(sql, DBRunner.intSeqHandler, params: _*)
-	}
-	def queryLongSeq(sql: String, params: Any*): Seq[Long] = {
-		query(sql, DBRunner.longSeqHandler, params: _*)
-	}
-	def queryStringSeq(sql: String, params: Any*): Seq[String] = {
-		query(sql, DBRunner.strSeqHandler, params: _*)
+	def query_bytes(sql: String, params: Any*): scala.Array[Byte] = {
+		query(sql, DBRunner.single_bytes_mapper, params: _*)
 	}
 
-	def queryStrDblSeq(sql: String, params: Any*): Seq[(String, Double)] = {
-		query(sql, DBRunner.strDoubleSeqHandler, params: _*)
+	def query_int_seq(sql: String, params: Any*): Seq[Int] = {
+		query(sql, DBRunner.seq_int_mapper, params: _*)
 	}
-	def queryIntDblSeq(sql: String, params: Any*): Seq[(Int, Double)] = {
-		query(sql, DBRunner.intDoubleSeqHandler, params: _*)
+	def query_long_seq(sql: String, params: Any*): Seq[Long] = {
+		query(sql, DBRunner.seq_long_mapper, params: _*)
 	}
-	def queryIntIntSeq(sql: String, params: Any*): Seq[(Int, Int)] = {
-		query(sql, DBRunner.intIntSeqHandler, params: _*)
-	}
-	def queryStrStrDblSeq(sql: String, params: Any*): Seq[(String, String, Double)] = {
-		query(sql, DBRunner.strStrDoubleSeqHandler, params: _*)
+	def query_string_seq(sql: String, params: Any*): Seq[String] = {
+		query(sql, DBRunner.seq_str_mapper, params: _*)
 	}
 
-	def queryBean[T <: AnyRef](typ: Class[T], sql: String, params: Any*): T = {
-		query(sql, new SingleHandler[T](RowMapperToBean.of(typ).apply, null.asInstanceOf[T]), params: _*)
+	def query_bean[T <: AnyRef](typ: Class[T], sql: String, params: Any*): T = {
+		query(sql, new SingleMapper[T](DBBeanMapper.of(typ).apply, null.asInstanceOf[T]), params: _*)
 	}
-	def queryBeans[T <: AnyRef](typ: Class[T], sql: String, params: Any*): Seq[T] = {
-		query(sql, new SeqHandler[T](RowMapperToBean.of(typ).apply), params: _*)
-	}
-
-	def queryOne[T](sql: String, mapper: ResultSet => T, params: Any*): T = {
-		queryOneWithDefault[T](sql, null.asInstanceOf[T], mapper, params: _*)
-	}
-	def queryOneWithDefault[T](sql: String, default: T, mapper: ResultSet => T, params: Any*): T = {
-		query(sql, new SingleHandler[T](mapper, default), params: _*)
+	def query_beans[T <: AnyRef](typ: Class[T], sql: String, params: Any*): Seq[T] = {
+		query(sql, new SeqMapper[T](DBBeanMapper.of(typ).apply), params: _*)
 	}
 
-	def querySeq[T](sql: String, mapper: ResultSet => T, params: Any*): Seq[T] = {
-		query(sql, new SeqHandler[T](mapper), params: _*)
+	def query_one[T](sql: String, mapper: ResultSet => T, params: Any*): T = {
+		query_one_with_default[T](sql, null.asInstanceOf[T], mapper, params: _*)
 	}
-	def queryEach(sql: String, mapper: ResultSet => Unit, params: Any*): Unit = {
-		query(sql, new EachHandler(mapper), params: _*)
+	def query_one_with_default[T](sql: String, default: T, mapper: ResultSet => T, params: Any*): T = {
+		query(sql, new SingleMapper[T](mapper, default), params: _*)
+	}
+
+	def query_seq[T](sql: String, mapper: ResultSet => T, params: Any*): Seq[T] = {
+		query(sql, new SeqMapper[T](mapper), params: _*)
+	}
+	def query_each(sql: String, mapper: ResultSet => Unit, params: Any*): Unit = {
+		query(sql, new EachMapper(mapper), params: _*)
 	}
 	def dump(sql: String, params: Any*): Int = {
-		query(sql, DBRunner.dumpHandler, params: _*)
+		query(sql, DBRunner.dump_mapper, params: _*)
 	}
-	def query[T](sql: String, handler: ResultSet => T, params: Any*): T = {
-		query(sql, new RawHandler[T](handler), params: _*)
+	def query[T](sql: String, mapper: ResultSet => T, params: Any*): T = {
+		query(sql, new RawMapper[T](mapper), params: _*)
 	}
 
 	/* ------------------------- impl ------------------------- */
 
-	def insertReturnKey(sql: String, params: Any*): Long = {
+	def insert_return_key(sql: String, params: Any*): Long = {
 		var conn: Connection = null
 		var stmt: PreparedStatement = null
 		var rs: ResultSet = null
 		try {
 			conn = prepareConnection
 			stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
-			fillAnyStatement(stmt, params: _*)
+			fill_any_statement(stmt, params: _*)
 			stmt.executeUpdate
 			rs = stmt.getGeneratedKeys
 			if (rs.next) rs.getLong(1) else 0
 		} catch {
-			case e: SQLException => throw newException(e, sql, params: _*)
+			case e: SQLException => throw new_exception(e, sql, params: _*)
 		} finally {
 			DbUtils.closeQuietly(rs)
 			DbUtils.closeQuietly(stmt)
@@ -196,11 +183,11 @@ class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
 			stmt.setFetchSize(8192)
 			stmt.setFetchDirection(ResultSet.FETCH_REVERSE)
 
-			fillAnyStatement(stmt, params: _*)
+			fill_any_statement(stmt, params: _*)
 			rs = stmt.executeQuery
 			rsh.handle(rs)
 		} catch {
-			case e: SQLException => throw newException(e, sql, params: _*)
+			case e: SQLException => throw new_exception(e, sql, params: _*)
 		} finally {
 			DbUtils.closeQuietly(rs)
 			DbUtils.closeQuietly(stmt)
@@ -214,22 +201,22 @@ class DBRunner(ds: DataSource) extends AbstractQueryRunner(ds) {
 		try {
 			conn = prepareConnection
 			stmt = conn.prepareStatement(sql)
-			fillAnyStatement(stmt, params: _*)
+			fill_any_statement(stmt, params: _*)
 			stmt.executeUpdate()
 		} catch {
-			case e: SQLException => throw newException(e, sql, params: _*)
+			case e: SQLException => throw new_exception(e, sql, params: _*)
 		} finally {
 			DbUtils.closeQuietly(stmt)
 			DbUtils.closeQuietly(conn)
 		}
 	}
 
-	private def fillAnyStatement(stmt: PreparedStatement, params: Any*) {
+	private def fill_any_statement(stmt: PreparedStatement, params: Any*) {
 		for (i <- params.indices; param = params(i)) {
 			stmt.setObject(i + 1, param)
 		}
 	}
-	private def newException(e: SQLException, sql: String, params: Any*): SQLException = {
+	private def new_exception(e: SQLException, sql: String, params: Any*): SQLException = {
 		val msg = s"${e.getMessage} Query: $sql Parameters: ${params.mkString(", ")}"
 		new SQLException(msg, e.getSQLState, e.getErrorCode)
 	}

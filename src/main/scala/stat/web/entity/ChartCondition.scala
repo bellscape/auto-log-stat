@@ -3,11 +3,11 @@ package stat.web.entity
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils.toInt
 import stat.web.WebEnv
-import stat.web.logic.StatUtil
+import util.TimeUtil
 
 import scala.util.matching.Regex.Match
 
-object ChartCondition extends StatUtil {
+object ChartCondition {
 
 	// url规则：/d-s0-t20150101-l7/dev/
 	private val uri_pattern = "/((?<type>d|h|m)(-s(?<s>[0-9]+))?(-t(?<t>[0-9]+))?(-l(?<l>[0-9]+))?/)?(?<proj>[\\w.,~*-]+)/(?<key>[\\w.,~*+-]+)".r
@@ -21,12 +21,12 @@ object ChartCondition extends StatUtil {
 				var len = toInt(m.group("l")) // group nullable
 				val proj = m.group("proj")
 				val key = m.group("key")
-				if (till / 1000000 != 20) till = today
+				if (till / 1000000 != 20) till = TimeUtil.today().toInt
 				if (len <= 0) len = default_l(typ)
 				else len = Math.min(len, max_l(typ))
 				new ChartCondition(typ, s, till, len, proj, key)
 			}
-			case None => WebEnv.default_cond
+			case None => WebEnv.default_cond()
 		}
 	}
 
