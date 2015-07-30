@@ -17,7 +17,7 @@ class MenuBuilder(val out_println: String => Unit, cond: ChartCondition, val act
 	def this(out_println: String => Unit, cond: ChartCondition) {
 		this(out_println, cond,
 			s"${cond.proj}/${cond.key}",
-			WebEnv.context_path + "/show" + cond.toString.replaceFirst( """/[^/]+/[^/]+$""", "")
+			WebEnv.context_path + "/chart" + cond.toString.replaceFirst( """/[^/]+/[^/]+$""", "")
 		)
 	}
 	def this(out: JspWriter, req: HttpServletRequest) {

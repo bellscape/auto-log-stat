@@ -14,15 +14,15 @@ protected[util] class DBBeanMapper[T <: AnyRef](typ: Class[T]) {
 
 	/* ------------------------- parse class ------------------------- */
 
-	val fields = typ.getFields.filter { f =>
+	private val fields = typ.getFields.filter { f =>
 		val mod = f.getModifiers
 		!Modifier.isStatic(mod) && Modifier.isPublic(mod)
-	}.map(f => (f.getName.toLowerCase, f)).toMap
+	}.map(f => (f.getName.toLowerCase, f)).toMap.withDefaultValue(null)
 
-	val methods = typ.getMethods.filter { m =>
+	private val methods = typ.getMethods.filter { m =>
 		val mod = m.getModifiers
 		!Modifier.isStatic(mod) && Modifier.isPublic(mod) && m.getParameterCount == 1
-	}.map(m => (m.getName.toLowerCase, m)).toMap
+	}.map(m => (m.getName.toLowerCase, m)).toMap.withDefaultValue(null)
 
 	/* ------------------------- api ------------------------- */
 
@@ -33,8 +33,8 @@ protected[util] class DBBeanMapper[T <: AnyRef](typ: Class[T]) {
 		bean
 	}
 
-	case class CallMethod(name: String)
-	case class FillField(name: String)
+	private case class CallMethod(name: String)
+	private case class FillField(name: String)
 
 	private def fill(bean: T, rs: ResultSet, db_col_name: String, col: Int): Unit = {
 		val col_name = db_col_name.toLowerCase
@@ -52,14 +52,18 @@ protected[util] class DBBeanMapper[T <: AnyRef](typ: Class[T]) {
 			CallMethod(name + "_$eq"), // Scala bean
 			FillField(name))
 		}.foreach {
-			case CallMethod(key) => if (methods.contains(key)) {
-				fill_method(methods(key), bean, rs, col)
-				return
-			}
-			case FillField(key) => if (fields.contains(key)) {
-				fill_field(fields(key), bean, rs, col)
-				return
-			}
+			case CallMethod(key) =>
+				val method = methods(key)
+				if (method != null) {
+					fill_method(method, bean, rs, col)
+					return
+				}
+			case FillField(key) =>
+				val field = fields(key)
+				if (field != null) {
+					fill_field(field, bean, rs, col)
+					return
+				}
 		}
 
 		if (col_name != "id") {

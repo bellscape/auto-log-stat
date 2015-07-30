@@ -1,33 +1,31 @@
 package stat.web.entity
 
+import java.util.regex.Pattern
+
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils.toInt
 import stat.web.WebEnv
 import util.TimeUtil
 
-import scala.util.matching.Regex.Match
-
 object ChartCondition {
 
 	// url规则：/d-s0-t20150101-l7/dev/
-	private val uri_pattern = "/((?<type>d|h|m)(-s(?<s>[0-9]+))?(-t(?<t>[0-9]+))?(-l(?<l>[0-9]+))?/)?(?<proj>[\\w.,~*-]+)/(?<key>[\\w.,~*+-]+)".r
+	private val uri_pattern = Pattern.compile("/((?<type>d|h|m)(-s(?<s>[0-9]+))?(-t(?<t>[0-9]+))?(-l(?<l>[0-9]+))?/)?(?<proj>[\\w.,~*-]+)/(?<key>[\\w.,~*+-]+)")
 
 	def parse(uri: String): ChartCondition = {
-		uri_pattern.findFirstMatchIn(uri) match {
-			case Some(m: Match) => {
-				val typ = TimeType.valueOf(m.group("type")) // group nullable
-				val s = toInt(m.group("s"), 0) // group nullable
-				var till = toInt(m.group("t")) // group nullable
-				var len = toInt(m.group("l")) // group nullable
-				val proj = m.group("proj")
-				val key = m.group("key")
-				if (till / 1000000 != 20) till = TimeUtil.today().toInt
-				if (len <= 0) len = default_l(typ)
-				else len = Math.min(len, max_l(typ))
-				new ChartCondition(typ, s, till, len, proj, key)
-			}
-			case None => WebEnv.default_cond()
-		}
+		val m = uri_pattern.matcher(uri)
+		if (m.matches()) {
+			val typ = TimeType.valueOf(m.group("type")) // group nullable
+			val s = toInt(m.group("s"), 0) // group nullable
+			var till = toInt(m.group("t")) // group nullable
+			var len = toInt(m.group("l")) // group nullable
+			val proj = m.group("proj")
+			val key = m.group("key")
+			if (till / 1000000 != 20) till = TimeUtil.today().toInt
+			if (len <= 0) len = default_l(typ)
+			else len = Math.min(len, max_l(typ))
+			new ChartCondition(typ, s, till, len, proj, key)
+		} else WebEnv.default_cond()
 	}
 
 	// bell(2014-2): 准备修改
@@ -38,7 +36,6 @@ object ChartCondition {
 	def default_l(typ: TimeType): Int = {
 		if (typ eq TimeType.d) 60 else if (typ eq TimeType.h) 7 else 2
 	}
-
 
 }
 
